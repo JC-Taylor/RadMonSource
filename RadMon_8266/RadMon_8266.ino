@@ -321,7 +321,7 @@ void InitWifi()
 void SwapUnits()
 {
   Units=1-Units;
-  LogString("Swap Units ("+server.client().remoteIP().toString()+")",1);  
+  LogString("Swap Units ("+server.client().remoteIP().toString()+")\n",1);  
 }
 
 void  InitWebServer()
