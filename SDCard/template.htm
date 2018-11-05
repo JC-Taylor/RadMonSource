@@ -16,15 +16,17 @@
 <script>
 var xmlHttp=createXmlHttpObject()
 var xmlHttp2=createXmlHttpObject()
+
 function createXmlHttpObject()
 {
+ var xmlHttpTemp
  if(window.XMLHttpRequest) {
-    xmlHttp=new XMLHttpRequest()
+    xmlHttpTemp=new XMLHttpRequest()
  }
  else {
-    xmlHttp=new ActiveXObject('Microsoft.XMLHTTP')
+    xmlHttpTemp=new ActiveXObject('Microsoft.XMLHTTP')
  }
- return xmlHttp
+ return xmlHttpTemp
 }
 
 function process(){
