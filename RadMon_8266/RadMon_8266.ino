@@ -121,10 +121,13 @@ void TriggerAlarm(String Msg,int TryCount,int Lockout)
 
 void LogString(String Str,int IncTime)
 {
-//  File LogFile = SD.open(F("log.txt"), FILE_WRITE);
-  File LogFile = SD.open(LogFileName(), FILE_WRITE);  
+  now = rtc.now();
+  String TempStr;
+  TempStr=LogFileName();
+  File LogFile = SD.open(TempStr.c_str(), FILE_WRITE);  
   if (LogFile)
   {
+    Serial.println(TempStr.c_str());
     if (IncTime) Str=GetDateTimeStr(0)+" "+String(FreeMem())+" "+Str;
     LogFile.print(Str.c_str());
     LogFile.close();  
@@ -132,9 +135,9 @@ void LogString(String Str,int IncTime)
   }
 }
 
-String LogFileName() // return the name & path of the current log file in use filename now "log102018.log" & placed in "logs" folder
-{
-  return "/Logs/log"+String(now.month())+String(now.year())+".log";
+String LogFileName() // return the name & path of the current log file in use filename now "log201810.log" & placed in "logs" folder
+{  
+  return "/Logs/"+GetDateTimeStr(4)+".log";
 }
 
 String GetDateTimeStr(int Res)  // Return current time in various useful formats
@@ -231,11 +234,11 @@ void InitSDCard()
 
 void InitRTC()
 {
-  LogString(F("Init RTC.."),0);
+  Serial.print(F("Init RTC.."));
   if (rtc.begin())
-    LogString(F("OK\n"),0);
+    Serial.println(F("OK"));
   else
-    LogString(F("Fail\n"),0);
+    Serial.println(F("Fail"));
 }
 
 unsigned int FreeMem()
@@ -343,7 +346,6 @@ void SendRTData()
      XML=String(F("<?xml version='1.0'?> <response> "))+String(int(CpmAvg))+String(F(" cpm</response> "));
   server.send(200,F("text/xml"),XML);
 }
-
 
 String ConvertDateFormat(String DateStr) // Convert a string from "2018-03-23" to "20180323"
 {
@@ -519,7 +521,7 @@ void LoggingTick()
        TempVal=(float)LastCpm * TUBECONVERSIONFACTOR * 1000; // Current averaged reading converted to nSv/Hr
        if (((int)TempVal)>AlarmThreshold && AlarmThreshold>0 && !AlarmLockout)
        {
-          TriggerAlarm(String(TempVal/1000,2)+"uSv/Hr ("+String(LastCpm)+"cpm)",10,AlarmLockoutTime); // message, 10 retrys, lockout time (sec)
+          TriggerAlarm("Minute Average:"+String(TempVal/1000,2)+"uSv/Hr ("+String(LastCpm)+"cpm)",10,AlarmLockoutTime); // message, 10 retrys, lockout time (sec)
           LogString(F("Requesting Alarm\n"),1);
        }
        FileName=GetDateTimeStr(3)+".csv"; // YMD.csv
@@ -538,7 +540,7 @@ void LoggingTick()
          TempVal=(float)HourAvg * TUBECONVERSIONFACTOR * 1000; // Current averaged reading converted to nSv/Hr
          if (((int)TempVal)>AlarmThresholdHH && AlarmThresholdHH>0 && !AlarmLockout)
          {
-            TriggerAlarm(String(TempVal/1000,2)+"uSv/Hr ("+String(HourAvg)+"cpm)",10,AlarmLockoutTime); // message, 10 retrys, lockout time (sec)
+            TriggerAlarm("Hourly Average:"+String(TempVal/1000,2)+"uSv/Hr ("+String(HourAvg)+"cpm)",10,AlarmLockoutTime); // message, 10 retrys, lockout time (sec)
             LogString(F("Requesting Alarm (Hour High)\n"),1);
          }
          if (((int)TempVal)<AlarmThresholdHL && AlarmThresholdHL>0 && !AlarmLockout)
@@ -556,25 +558,10 @@ void LoggingTick()
   }
 }
 
-void LogIP()
-{
-  String TempStr=server.client().remoteIP().toString();
-  if (TempStr.substring(0,3)!="192")
-  {
-    File IPFile = SD.open(F("ip.txt"), FILE_WRITE);
-    if (IPFile)
-    {
-      IPFile.print(GetDateTimeStr(0)+","+TempStr+"\n");
-      IPFile.close();  
-    }
-  }
-}
-
 void HandleNotFound()
 {
     String Uri=server.uri();
     Uri.toLowerCase();
-    if (Uri.indexOf("/xml")<0) LogIP();
     if (FreeMem()<8000)
     {
       LogString(String(F("Low Mem:"))+FreeMem()+"\n",1);
@@ -591,12 +578,10 @@ void HandleNotFound()
       if (Uri=="/robots.txt")        { SendFile(Uri, F("text/plain")); return;}
       if (Uri=="/admin.htm")         { HandleAdminPage(); return; }
       if (Uri=="/swaptheunits")      { SwapUnits(); return; }
- //     if (Uri=="/log.txt")           { SendFile(LogFileName(), F("text/plain")); return;}
-      if (Uri=="/ip.txt")            { SendFile(Uri, F("text/plain")); return;}
       if (Uri.indexOf(".dat")>0)     { ShowGraphPage(Uri); return; }
       if (Uri.indexOf(".csv")>0)     { SendFile(Uri, F("text/plain")); return; }
       if (Uri.indexOf(".htm")>0)     { SendFile(Uri, F("text/html")); return; }
-      if (Uri.indexOf(".log")>0)     { SendFile(Uri, F("text/html")); return; }
+      if (Uri.indexOf(".log")>0)     { SendFile(Uri, F("text/plain")); return; }
       server.send(404, F("text/plain"), String(F("File not found:"))+Uri+"\n");
       LogString(Uri+" ("+server.client().remoteIP().toString()+") Not Found\n",1);
     }
@@ -654,7 +639,6 @@ void HandleAdminPage() // Request for Admin Page
       Err+=ReadIntArgValue(F("Minute"),&Min);
       Err+=ReadIntArgValue(F("Second"),&Sec);
       if (!Err) rtc.adjust(DateTime(Year, Month, Day, Hour, Min, Sec));
-//      if (!ReadIntArgValue(F("PWM"),&PwmWidth)) analogWrite(PWMPIN, PwmWidth); // PWM Pulse width
       ReadIntArgValue(F("AUDIOALARM"),&AudioAlarm);
       ReadIntArgValue(F("AUDIOEN"),&AudioEnabled);
       
@@ -697,14 +681,6 @@ void HandleAdminPage() // Request for Admin Page
         ServiceAlarm();
         TriggerAlarm("",0,0); // clear it down in case it failed
       }
-/*      if (server.hasArg(F("CLEARLOG")))
-        if (server.arg("CLEARLOG") == AdminPw)
-        {
-            Serial.println(F("Clearing Log"));
-            SD.remove(F("log.txt"));
-            SD.remove(F("ip.txt"));
-            LogString(String(F("Logs Deleted ("))+server.client().remoteIP().toString()+")..",1);
-        } */
     }
     now = rtc.now();
     server.setContentLength(CONTENT_LENGTH_UNKNOWN);
@@ -721,7 +697,6 @@ void HandleAdminPage() // Request for Admin Page
     Content += String(F("<input type='text' size=4 name='Second' value='"))+String(now.second())+String(F("'> Second<br>"));
     Content += F("<input type='submit' size=4 name='SUBMIT' value='Submit'></p></form><br></div></div>");
     Content += F("<div class='panel panel-default'><div class='panel-heading'>Setup</div><div class='panel-body'><form action='/admin.htm' method='POST'>");
-//    Content += String(F("<p><input type='text' size=4 name='PWM' value='"))+String(PwmWidth)+String(F("'> PWM Pulse Width<br>"));
     Content += String(F("<input type='text' size=4 name='ALARM' value='"))+String(AlarmThreshold)+String(F("'> Alert Alarm Threshold (nSv/Hr) 0=No Alarm<br>"));
     Content += String(F("<input type='text' size=4 name='ALARMHL' value='"))+String(AlarmThresholdHL)+String(F("'> Hour Average Alert Alarm Threshold - LOW (nSv/Hr) 0=No Alarm<br>"));
     Content += String(F("<input type='text' size=4 name='ALARMHH' value='"))+String(AlarmThresholdHH)+String(F("'> Hour Average Alert Alarm Threshold - HIGH (nSv/Hr) 0=No Alarm<br>"));  
@@ -732,10 +707,7 @@ void HandleAdminPage() // Request for Admin Page
     else              Content += F("Audio Alarm: <input type='radio' name='AUDIOALARM' value='1' >&nbspOn <input type='radio' name='AUDIOALARM' value='0'checked>&nbsp Off<br>");
     Content += F("<input type='submit' size=4 name='SUBMIT' value='Submit'></p></form><br>");
     Content += String(F("<form action='"))+LogFileName()+String(F("' method=\'post'><p><input type='submit' name='SHOWLOG' value='Show Log'></p></form>"));
-    Content += F("<form action='/ip.txt' method=\'post'><p><input type='submit' name='SHOWIPLOG' value='Show IP Log'></p></form>");
     Content += F("<form action='/admin.htm' method='POST'><p>");
-    Content += F("<input type='submit' name='SUBMIT' value='Clear Logs'>");
-//    Content += F("<input type='password' name='CLEARLOG' placeholder='password'></p></form>");
     Content += F("<form action='/admin.htm' method='post'><p><input type='submit' name='ALARMTEST' value='Alarm Test'></p></form>");
     if (AlarmStatus==ALARM_FAILMEM) Content += F("<p>Send Failed (Low memory)</p>");
     if (AlarmStatus==ALARM_FAIL) Content += F("<p>Send Failed</p>");
@@ -1052,13 +1024,13 @@ void setup()
   delay(100);
   Serial.println();
   InitSDCard();
-  LogString(F("=========BOOT!========\n"),0);  
   InitRTC();
+  now = rtc.now();
+  LogString(F("=========BOOT!========\n"),0);  
   InitSystem();
   InitTimers();
   InitWifi();  // If there were no problems connecting last time
   InitWebServer();
-  now = rtc.now();
   LastMinute=now.minute();
   LastDay=now.day();
   Serial.printf("Mem:%d\n",FreeMem());
