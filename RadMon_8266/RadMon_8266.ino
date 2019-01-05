@@ -965,8 +965,8 @@ void CreateArchivePage()
             {
               FileName.replace(".csv",".dat");
               OptFile.print(F("<div class='row'><div class='panel-group'><div class='col-sm-1'></div>"));
-              OptFile.print(String(F("<div class='col-sm-2'><div class='well well-sm'><a href='"))+FileName+"'>"+MonthStr(Month)+"</a></div></div>\n");              
-              OptFile.print(String(F("<div class='col-sm-2'><div class='panel panel-default'><div class='panel-heading'><a data-toggle='collapse' href='#collapse"))+String(Month)+String(F("'>Show days</a></div><div id='collapse"))+String(Month)+String(F("' class='panel-collapse collapse'><ul class='list-group'>")));
+              OptFile.print(String(F("<div class='col-sm-2'><div class='well well-sm'><a href='"))+FileName+"'>"+MonthStr(Month)+"</a></div></div>\n");
+              OptFile.print(String(F("<div class='col-sm-2'><div class='panel panel-default'><div class='panel-heading'><a data-toggle='collapse' href='#collapse"))+String(now.year())+String(Month)+String(F("'>Show days</a></div><div id='collapse"))+String(now.year())+String(Month)+String(F("' class='panel-collapse collapse'><ul class='list-group'>\n")));
               FileName="/Data/"+YearStr+"/"+YearStr+Int2StrLZ(Month); // Format: "/2018/02/201802"
               for (Day=31;Day>0;Day--)
               {
