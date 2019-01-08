@@ -711,8 +711,8 @@ void HandleAdminPage() // Request for Admin Page
     if (AlarmStatus==ALARM_FAIL) Content += F("<p>Send Failed</p>");
     if (AlarmStatus==ALARM_OK) Content += F("<p>Send OK</p>");
     AlarmStatus=0;
-    Content += F("</div>");    
-    Content += F("<div class='panel-heading'>Setup</div><div class='panel-body'><form action='/admin.htm' method='POST'><p>");
+    Content += F("</div>");
+    Content += F("<div class='panel-heading'>Status</div><div class='panel-body'><p>");
     Content += String(F("Free Memory: ")) + String(FreeMem())+"<br>";
     Content += String(F("Build: "))+String(CompileDate)+"<br>";
     Content += String(F("Up Time: ")) + String(OneSecTick/3600)+"Hr "+ String((OneSecTick/60)%60)+"Min <br>";
@@ -722,7 +722,7 @@ void HandleAdminPage() // Request for Admin Page
     Content += String(F("Wifi Signal Strength: "))+String(WifiSignalStrength())+"dBm ("+String(WiFi.SSID())+")<br></p>";
     Content += String(F("<form action='"))+LogFileName()+String(F("' method=\'post'><p><input type='submit' name='SHOWLOG' value='Show Log'></p></form>"));
     Content += F("<form action='/admin.htm' method='post'><p><input type='submit' name='reboot' value='Reboot'></p></form>");
-    Content += F("<form action='/admin.htm' method='post'><p><input type='submit' name='LOGOUT' value='Log Out'></p>");
+    Content += F("<form action='/admin.htm' method='post'><p><input type='submit' name='LOGOUT' value='Log Out'></p></form>");
     Content += F("</p></div></div>");
     Content += F("</body></html>");
     server.sendContent(Content);
