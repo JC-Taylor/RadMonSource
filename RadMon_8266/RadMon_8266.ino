@@ -599,7 +599,7 @@ int ReadIntArgValue(String Arg,int * VarToSet)
   return 1;
 }
 
-int WifiSignalStrength()
+/* int WifiSignalStrength()
 {
   byte AvailableNetworks = WiFi.scanNetworks();
   for (int Network = 0; Network < AvailableNetworks; Network++)
@@ -607,7 +607,7 @@ int WifiSignalStrength()
     if (WiFi.SSID(Network) == WiFi.SSID()) return WiFi.RSSI(Network);
   }
   return -1;
-}
+} */
 
 
 void HandleAdminPage() // Request for Admin Page
@@ -719,11 +719,11 @@ void HandleAdminPage() // Request for Admin Page
     Content += String(F("Average count since boot: "))+String((float)(TotCount*60)/OneSecTick)+"<br>";
     server.sendContent(Content);
     Content="";
-    Content += String(F("Wifi Signal Strength: "))+String(WifiSignalStrength())+"dBm ("+String(WiFi.SSID())+")<br></p>";
+    Content += String(F("Wifi Signal Strength: "))+String(WiFi.RSSI())+"dBm ("+String(WiFi.SSID())+")<br></p>";
     Content += String(F("<form action='"))+LogFileName()+String(F("' method=\'post'><p><input type='submit' name='SHOWLOG' value='Show Log'></p></form>"));
     Content += F("<form action='/admin.htm' method='post'><p><input type='submit' name='reboot' value='Reboot'></p></form>");
     Content += F("<form action='/admin.htm' method='post'><p><input type='submit' name='LOGOUT' value='Log Out'></p></form>");
-    Content += F("</p></div></div>");
+    Content += F("</div></div>");
     Content += F("</body></html>");
     server.sendContent(Content);
     server.sendContent("");
